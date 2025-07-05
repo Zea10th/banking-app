@@ -1,12 +1,4 @@
 package com.biezbardis.bankingapp.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class ClientRequest {
-    private String clientName;
+public record ClientRequest(String clientName) {
 }

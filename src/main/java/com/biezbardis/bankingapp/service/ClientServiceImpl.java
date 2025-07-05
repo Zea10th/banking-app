@@ -3,6 +3,7 @@ package com.biezbardis.bankingapp.service;
 import com.biezbardis.bankingapp.dto.ClientRequest;
 import com.biezbardis.bankingapp.dto.ClientResponse;
 import com.biezbardis.bankingapp.entity.Client;
+import com.biezbardis.bankingapp.exception.ClientAlreadyExistsException;
 import com.biezbardis.bankingapp.repository.ClientRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -20,8 +21,10 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public ClientResponse create(ClientRequest clientRequest) {
-        var client = clientRepository.save(new Client(clientRequest.getClientName()));
-        return new ClientResponse(client.getId(), clientRequest.getClientName());
+        validateClient(clientRequest.clientName());
+
+        var client = clientRepository.save(new Client(clientRequest.clientName()));
+        return new ClientResponse(client.getId(), clientRequest.clientName());
     }
 
     @Override
@@ -30,5 +33,11 @@ public class ClientServiceImpl implements ClientService {
         return clients.stream()
                 .map(client -> new ClientResponse(client.getId(), client.getName()))
                 .toList();
+    }
+
+    private void validateClient(String clientName) {
+        if (clientRepository.findByName(clientName).isPresent()) {
+            throw new ClientAlreadyExistsException("Client with name '" + clientName + "' already exists.");
+        }
     }
 }

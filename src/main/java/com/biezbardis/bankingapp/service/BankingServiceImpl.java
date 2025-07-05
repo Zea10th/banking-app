@@ -40,19 +40,19 @@ public class BankingServiceImpl implements BankingService {
 
     @Override
     public TransactionResponse deposit(TransactionRequest request) {
-        validateAmount(request.getAmount());
+        validateAmount(request.amount());
 
-        Account account = getOrCreateAccount(request.getClientName(), request.getCurrency());
+        Account account = getOrCreateAccount(request.clientName(), request.currency());
 
-        account.setBalance(account.getBalance() + request.getAmount());
+        account.setBalance(account.getBalance() + request.amount());
         accountRepository.save(account);
 
         Transaction transaction = new Transaction(
                 account,
                 TransactionType.DEPOSIT,
-                request.getAmount(),
+                request.amount(),
                 account.getBalance(),
-                request.getDescription()
+                request.description()
         );
         transactionRepository.save(transaction);
 
@@ -66,26 +66,26 @@ public class BankingServiceImpl implements BankingService {
 
     @Override
     public TransactionResponse withdraw(TransactionRequest request) {
-        validateAmount(request.getAmount());
+        validateAmount(request.amount());
 
-        Account account = getOrCreateAccount(request.getClientName(), request.getCurrency());
+        Account account = getOrCreateAccount(request.clientName(), request.currency());
 
-        if (account.getBalance().compareTo(request.getAmount()) < 0) {
+        if (account.getBalance().compareTo(request.amount()) < 0) {
             throw new InsufficientFundsException(
                     "Insufficient funds. Current balance: " + account.getBalance() +
-                            " " + request.getCurrency()
+                            " " + request.currency()
             );
         }
 
-        account.setBalance(account.getBalance() - request.getAmount());
+        account.setBalance(account.getBalance() - request.amount());
         accountRepository.save(account);
 
         Transaction transaction = new Transaction(
                 account,
                 TransactionType.WITHDRAWAL,
-                request.getAmount(),
+                request.amount(),
                 account.getBalance(),
-                request.getDescription()
+                request.description()
         );
         transactionRepository.save(transaction);
 
@@ -100,7 +100,7 @@ public class BankingServiceImpl implements BankingService {
     @Transactional
     @Override
     public AccountResponse getBalance(BalanceRequest request) {
-        Account account = getOrCreateAccount(request.getClientName(), request.getCurrency());
+        Account account = getOrCreateAccount(request.clientName(), request.currency());
 
         return new AccountResponse(
                 account.getId(),

@@ -47,7 +47,7 @@ public class BankingController {
 
     @GetMapping("/accounts")
     public ResponseEntity<List<AccountResponse>> getAllAccounts(@Valid @RequestBody ClientResponse response) {
-        List<AccountResponse> accounts = bankingService.getAllAccounts(response.getClientName());
+        List<AccountResponse> accounts = bankingService.getAllAccounts(response.clientName());
         return ResponseEntity.ok(accounts);
     }
 }

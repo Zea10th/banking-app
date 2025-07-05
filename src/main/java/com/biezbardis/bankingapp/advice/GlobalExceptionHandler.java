@@ -2,6 +2,7 @@ package com.biezbardis.bankingapp.advice;
 
 import com.biezbardis.bankingapp.dto.ErrorResponse;
 import com.biezbardis.bankingapp.exception.AccountNotFoundException;
+import com.biezbardis.bankingapp.exception.ClientAlreadyExistsException;
 import com.biezbardis.bankingapp.exception.ClientNotFoundException;
 import com.biezbardis.bankingapp.exception.InsufficientFundsException;
 import com.biezbardis.bankingapp.exception.InvalidAmountException;
@@ -21,6 +22,13 @@ public class GlobalExceptionHandler {
         logger.warn("Client not found: {}", ex.toString());
         ErrorResponse error = new ErrorResponse("CLIENT_NOT_FOUND", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(ClientAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleClientAlreadyExists(ClientAlreadyExistsException ex) {
+        logger.warn("Client already exists: {}", ex.toString());
+        ErrorResponse error = new ErrorResponse("CLIENT_ALREADY_EXISTS", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(AccountNotFoundException.class)
