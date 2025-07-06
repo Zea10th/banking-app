@@ -4,7 +4,7 @@ A simple Spring Boot application for basic banking operations: withdrawals, depo
 
 ---
 
-## 🧠 Table of Contents
+## Table of Contents
 
 - [Technologies](#technologies)
 - [Installation](#installation)
@@ -15,7 +15,7 @@ A simple Spring Boot application for basic banking operations: withdrawals, depo
 
 ---
 
-## ⚙️ Technologies
+## Technologies
 
 - Java 21+
 - Spring Boot 3.x
@@ -32,7 +32,7 @@ A simple Spring Boot application for basic banking operations: withdrawals, depo
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ```bash
 git clone git@github.com:Zea10th/banking-app.git
@@ -40,7 +40,7 @@ cd banking-app
 ./gradlew build
 ```
 
-## 🏃 Running the App
+## Running the App
 
 ### Local Run
 
@@ -56,11 +56,11 @@ or
 java -jar build/libs/banking-app-0.0.1-SNAPSHOT.jar
 ```
 
-## 🔐 Configuration
+## Configuration
 
 All environment variables can be set via `application.yml`.
 
-## 📬 API
+## API
 
 API documentation available at:
 
@@ -68,7 +68,7 @@ Swagger UI: http://localhost:8080/swagger-ui/index.html
 
 OpenAPI JSON: http://localhost:8080/v3/api-docs
 
-## 🧪 Testing
+## Testing
 
 ```bash
 ./gradlew test
