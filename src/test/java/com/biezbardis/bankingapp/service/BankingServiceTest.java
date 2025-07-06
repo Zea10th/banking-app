@@ -1,5 +1,7 @@
 package com.biezbardis.bankingapp.service;
 
+import com.biezbardis.bankingapp.dto.AccountResponse;
+import com.biezbardis.bankingapp.dto.BalanceRequest;
 import com.biezbardis.bankingapp.dto.TransactionRequest;
 import com.biezbardis.bankingapp.entity.Account;
 import com.biezbardis.bankingapp.entity.Client;
@@ -23,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static com.biezbardis.bankingapp.service.BankingServiceImpl.AMOUNT_MUST_BE_POSITIVE;
@@ -56,7 +59,7 @@ class BankingServiceTest {
     private final String description = "testDescription";
     private final long accountId = 100L;
 
-    // deposit method
+    // deposit
     @Test
     void shouldReturnDepositTransactionResponseWhenRequestIsValid() {
         double depositAmount = 10.0;
@@ -109,7 +112,7 @@ class BankingServiceTest {
         verify(clientRepository).findByName(clientName);
     }
 
-    // deposit method
+    // withdraw
     @Test
     void shouldReturnWithdrawalTransactionResponseWhenRequestIsValid() {
         double withdrawAmount = 5.0;
@@ -166,11 +169,47 @@ class BankingServiceTest {
         verify(accountRepository).findByClientIdAndCurrency(clientId, currency);
     }
 
+    // balance
     @Test
-    void getBalance() {
+    void shouldReturnAccountResponseWhenRequestIsValid() {
+        var request = new BalanceRequest(clientName, currency);
+        var client = new Client(clientId, clientName, Collections.emptyList());
+        var account = new Account(accountId, client, currency, currentBalance);
+
+        when(clientRepository.findByName(clientName)).thenReturn(Optional.of(client));
+        when(accountRepository.findByClientIdAndCurrency(clientId, currency)).thenReturn(Optional.of(account));
+
+        var actual = service.getBalance(request);
+
+        assertEquals(accountId, actual.accountId());
+        assertEquals(Currency.EUR, actual.currency());
+        assertEquals(currentBalance, actual.balance());
+
+        verify(clientRepository).findByName(clientName);
+        verify(accountRepository).findByClientIdAndCurrency(clientId, currency);
     }
 
     @Test
     void getAllAccounts() {
+        var client = new Client(clientId, clientName, Collections.emptyList());
+        var eurAccount = new Account(accountId, client, currency, currentBalance);
+        var chfAccount = new Account(101L, client, Currency.CHF, 25.0);
+        client.setAccounts(List.of(eurAccount, chfAccount));
+
+        when(clientRepository.findByName(clientName)).thenReturn(Optional.of(client));
+        when(accountRepository.findByClientId(clientId)).thenReturn(client.getAccounts());
+
+        var actual = service.getAllAccounts(clientName);
+        var expectedEurAccount = new AccountResponse(accountId, currency, currentBalance);
+        var expectedChfAccount = new AccountResponse(101L, Currency.CHF, 25.0);
+
+        assertEquals(2, actual.size());
+        assertTrue(actual.contains(expectedEurAccount));
+        assertTrue(actual.contains(expectedChfAccount));
+        assertInstanceOf(AccountResponse.class, actual.getFirst());
+        assertInstanceOf(AccountResponse.class, actual.getLast());
+
+        verify(clientRepository).findByName(clientName);
+        verify(accountRepository).findByClientId(clientId);
     }
 }
