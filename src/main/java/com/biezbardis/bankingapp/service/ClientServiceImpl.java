@@ -13,6 +13,8 @@ import java.util.List;
 @Service
 @Transactional
 public class ClientServiceImpl implements ClientService {
+    protected static final String CLIENT_ALREADY_EXISTS_STARTING = "Client with name '";
+    protected static final String CLIENT_ALREADY_EXISTS_ENDING = "' already exists.";
     private final ClientRepository clientRepository;
 
     public ClientServiceImpl(ClientRepository clientRepository) {
@@ -37,7 +39,7 @@ public class ClientServiceImpl implements ClientService {
 
     private void validateClient(String clientName) {
         if (clientRepository.findByName(clientName).isPresent()) {
-            throw new ClientAlreadyExistsException("Client with name '" + clientName + "' already exists.");
+            throw new ClientAlreadyExistsException(CLIENT_ALREADY_EXISTS_STARTING + clientName + CLIENT_ALREADY_EXISTS_ENDING);
         }
     }
 }
