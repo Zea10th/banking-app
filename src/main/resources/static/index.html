@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Banking Interface</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; }
+        section { margin-bottom: 30px; }
+        input, select, textarea { display: block; margin: 5px 0 10px 0; width: 300px; }
+        button { margin-bottom: 10px; }
+        .response { background: #f0f0f0; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+<h1>Banking Interface</h1>
+
+<section>
+    <h2>1. Create Client</h2>
+    <input id="createClientName" placeholder="Client Name" />
+    <button onclick="createClient()">Create</button>
+    <div id="createClientResp" class="response"></div>
+</section>
+
+<section>
+    <h2>2. List Clients</h2>
+    <button onclick="listClients()">Get Clients</button>
+    <div id="listClientsResp" class="response"></div>
+</section>
+
+<section>
+    <h2>3. Deposit</h2>
+    <input id="depositClient" placeholder="Client Name" />
+    <input id="depositCurrency" placeholder="Currency (e.g. EUR)" />
+    <input type="number" id="depositAmount" placeholder="Amount" />
+    <input id="depositDesc" placeholder="Description" />
+    <button onclick="deposit()">Deposit</button>
+    <div id="depositResp" class="response"></div>
+</section>
+
+<section>
+    <h2>4. Withdraw</h2>
+    <input id="withdrawClient" placeholder="Client Name" />
+    <input id="withdrawCurrency" placeholder="Currency" />
+    <input type="number" id="withdrawAmount" placeholder="Amount" />
+    <input id="withdrawDesc" placeholder="Description" />
+    <button onclick="withdraw()">Withdraw</button>
+    <div id="withdrawResp" class="response"></div>
+</section>
+
+<section>
+    <h2>5. Check Balance</h2>
+    <input id="balanceClient" placeholder="Client Name" />
+    <input id="balanceCurrency" placeholder="Currency" />
+    <button onclick="getBalance()">Check Balance</button>
+    <div id="balanceResp" class="response"></div>
+</section>
+
+<section>
+    <h2>6. Get Accounts</h2>
+    <input id="accountsClient" placeholder="Client Name" />
+    <button onclick="getAccounts()">Get Accounts</button>
+    <div id="accountsResp" class="response"></div>
+</section>
+
+<script>
+    const api = (path, method = 'GET', data = null) => {
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+        if (data) options.body = JSON.stringify(data);
+        return fetch(path, options).then(res => res.json());
+    };
+
+    const show = (id, data) => {
+        document.getElementById(id).textContent = JSON.stringify(data, null, 2);
+    };
+
+    function createClient() {
+        const name = document.getElementById('createClientName').value;
+        api('/api/clients/create', 'POST', { clientName: name })
+            .then(data => show('createClientResp', data));
+    }
+
+    function listClients() {
+        api('/api/clients').then(data => show('listClientsResp', data));
+    }
+
+    function deposit() {
+        api('/api/banking/deposit', 'POST', {
+            clientName: document.getElementById('depositClient').value,
+            currency: document.getElementById('depositCurrency').value,
+            amount: Number(document.getElementById('depositAmount').value),
+            description: document.getElementById('depositDesc').value
+        }).then(data => show('depositResp', data));
+    }
+
+    function withdraw() {
+        api('/api/banking/withdraw', 'POST', {
+            clientName: document.getElementById('withdrawClient').value,
+            currency: document.getElementById('withdrawCurrency').value,
+            amount: Number(document.getElementById('withdrawAmount').value),
+            description: document.getElementById('withdrawDesc').value
+        }).then(data => show('withdrawResp', data));
+    }
+
+    function getBalance() {
+        fetch('/api/banking/balance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                clientName: document.getElementById('balanceClient').value,
+                currency: document.getElementById('balanceCurrency').value
+            })
+        }).then(res => res.json()).then(data => show('balanceResp', data));
+    }
+
+    function getAccounts() {
+        fetch('/api/banking/accounts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                clientName: document.getElementById('accountsClient').value
+            })
+        }).then(res => res.json()).then(data => show('accountsResp', data));
+    }
+</script>
+</body>
+</html>

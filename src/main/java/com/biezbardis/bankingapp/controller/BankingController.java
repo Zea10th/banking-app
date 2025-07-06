@@ -72,7 +72,7 @@ public class BankingController {
                     content = @Content(schema = @Schema(implementation = AccountResponse.class))),
             @ApiResponse(responseCode = "404", description = "Client Not Found")
     })
-    @GetMapping(value = "/balance",
+    @PostMapping(value = "/balance",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AccountResponse> getBalance(@Valid @RequestBody BalanceRequest request) {
@@ -85,7 +85,7 @@ public class BankingController {
             @ApiResponse(responseCode = "200", description = "Accounts Provided", content = @Content(schema = @Schema(implementation = AccountResponse.class))),
             @ApiResponse(responseCode = "404", description = "Client Not Found")
     })
-    @GetMapping(value = "/accounts",
+    @PostMapping(value = "/accounts",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<AccountResponse>> getAllAccounts(@Valid @RequestBody ClientResponse response) {
