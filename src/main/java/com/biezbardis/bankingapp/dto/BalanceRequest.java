@@ -1,6 +1,7 @@
 package com.biezbardis.bankingapp.dto;
 
 import com.biezbardis.bankingapp.entity.Currency;
+import jakarta.validation.constraints.NotNull;
 
-public record BalanceRequest(String clientName, Currency currency) {
+public record BalanceRequest(@NotNull String clientName, @NotNull Currency currency) {
 }
