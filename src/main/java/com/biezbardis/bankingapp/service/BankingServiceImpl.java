@@ -25,6 +25,11 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class BankingServiceImpl implements BankingService {
+    protected static final String AMOUNT_MUST_BE_POSITIVE = "Amount must be positive";
+    protected static final String CLIENT_NOT_FOUND_STARTING = "Client not found: ";
+    protected static final String DEPOSIT_SUCCESSFUL = "Deposit successful";
+    protected static final String INSUFFICIENT_FUNDS_STARTING = "Insufficient funds. Current balance: ";
+    protected static final String WITHDRAWAL_SUCCESSFUL = "Withdrawal successful";
 
     private final ClientRepository clientRepository;
     private final AccountRepository accountRepository;
@@ -39,58 +44,36 @@ public class BankingServiceImpl implements BankingService {
     }
 
     @Override
-    public TransactionResponse deposit(TransactionRequest request) {
+    public TransactionResponse execute(TransactionRequest request, TransactionType type) {
         validateAmount(request.amount());
 
         Account account = getOrCreateAccount(request.clientName(), request.currency());
 
-        account.setBalance(account.getBalance() + request.amount());
-        accountRepository.save(account);
-
-        Transaction transaction = new Transaction(
-                account,
-                TransactionType.DEPOSIT,
-                request.amount(),
-                account.getBalance(),
-                request.description()
-        );
-        transactionRepository.save(transaction);
-
-        return new TransactionResponse(
-                "Deposit successful",
-                account.getCurrency(),
-                account.getBalance(),
-                LocalDateTime.now()
-        );
-    }
-
-    @Override
-    public TransactionResponse withdraw(TransactionRequest request) {
-        validateAmount(request.amount());
-
-        Account account = getOrCreateAccount(request.clientName(), request.currency());
-
-        if (account.getBalance().compareTo(request.amount()) < 0) {
+        if (type == TransactionType.WITHDRAWAL && account.getBalance().compareTo(request.amount()) < 0) {
             throw new InsufficientFundsException(
-                    "Insufficient funds. Current balance: " + account.getBalance() +
-                            " " + request.currency()
+                    INSUFFICIENT_FUNDS_STARTING + account.getBalance() + " " + request.currency()
             );
         }
 
-        account.setBalance(account.getBalance() - request.amount());
+        double balanceAfter = (type == TransactionType.WITHDRAWAL) ?
+                account.getBalance() - request.amount() :
+                account.getBalance() + request.amount();
+        account.setBalance(balanceAfter);
         accountRepository.save(account);
 
         Transaction transaction = new Transaction(
                 account,
-                TransactionType.WITHDRAWAL,
+                type,
                 request.amount(),
                 account.getBalance(),
                 request.description()
         );
         transactionRepository.save(transaction);
 
+        String message = (type == TransactionType.DEPOSIT) ? DEPOSIT_SUCCESSFUL : WITHDRAWAL_SUCCESSFUL;
+
         return new TransactionResponse(
-                "Withdrawal successful",
+                message,
                 account.getCurrency(),
                 account.getBalance(),
                 LocalDateTime.now()
@@ -112,7 +95,7 @@ public class BankingServiceImpl implements BankingService {
     @Transactional
     @Override
     public List<AccountResponse> getAllAccounts(String clientName) {
-        Client client = validateClient(clientName);
+        Client client = recieveClient(clientName);
 
         return accountRepository.findByClientId(client.getId())
                 .stream()
@@ -125,7 +108,7 @@ public class BankingServiceImpl implements BankingService {
     }
 
     private Account getOrCreateAccount(String clientName, Currency currency) {
-        Client client = validateClient(clientName);
+        Client client = recieveClient(clientName);
 
         return accountRepository.findByClientIdAndCurrency(client.getId(), currency)
                 .orElseGet(() -> {
@@ -134,15 +117,14 @@ public class BankingServiceImpl implements BankingService {
                 });
     }
 
-    private Client validateClient(String clientName) {
+    private Client recieveClient(String clientName) {
         return clientRepository.findByName(clientName)
-                .orElseThrow(() -> new ClientNotFoundException("Client not found: " + clientName));
+                .orElseThrow(() -> new ClientNotFoundException(CLIENT_NOT_FOUND_STARTING + clientName));
     }
 
     private void validateAmount(Double amount) {
         if (amount <= 0) {
-            throw new InvalidAmountException("Amount must be positive");
+            throw new InvalidAmountException(AMOUNT_MUST_BE_POSITIVE);
         }
     }
-
 }

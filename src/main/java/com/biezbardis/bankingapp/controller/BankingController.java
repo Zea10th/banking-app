@@ -5,6 +5,7 @@ import com.biezbardis.bankingapp.dto.BalanceRequest;
 import com.biezbardis.bankingapp.dto.ClientResponse;
 import com.biezbardis.bankingapp.dto.TransactionRequest;
 import com.biezbardis.bankingapp.dto.TransactionResponse;
+import com.biezbardis.bankingapp.entity.TransactionType;
 import com.biezbardis.bankingapp.service.BankingService;
 import com.biezbardis.bankingapp.service.BankingServiceImpl;
 import jakarta.validation.Valid;
@@ -29,13 +30,13 @@ public class BankingController {
 
     @PostMapping("/deposit")
     public ResponseEntity<TransactionResponse> deposit(@Valid @RequestBody TransactionRequest request) {
-        TransactionResponse response = bankingService.deposit(request);
+        TransactionResponse response = bankingService.execute(request, TransactionType.DEPOSIT);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/withdraw")
     public ResponseEntity<TransactionResponse> withdraw(@Valid @RequestBody TransactionRequest request) {
-        TransactionResponse response = bankingService.withdraw(request);
+        TransactionResponse response = bankingService.execute(request, TransactionType.WITHDRAWAL);
         return ResponseEntity.ok(response);
     }
 
