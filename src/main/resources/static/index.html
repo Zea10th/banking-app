@@ -2,108 +2,151 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Banking Interface</title>
+    <title>Bank App</title>
     <style>
         body { font-family: sans-serif; margin: 40px; }
         section { margin-bottom: 30px; }
-        input, select, textarea { display: block; margin: 5px 0 10px 0; width: 300px; }
-        button { margin-bottom: 10px; }
+        input, select, button { display: block; margin: 10px 0; padding: 8px; width: 300px; }
+        .hidden { display: none; }
         .response { background: #f0f0f0; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; }
+        #nav { margin-bottom: 40px; }
     </style>
 </head>
 <body>
-<h1>Banking Interface</h1>
 
-<section>
-    <h2>1. Create Client</h2>
-    <input id="createClientName" placeholder="Client Name" />
-    <button onclick="createClient()">Create</button>
-    <div id="createClientResp" class="response"></div>
+<div id="nav">
+    <span id="currentUser" style="font-weight: bold;"></span>
+</div>
+
+<!-- Welcome Page -->
+<section id="welcomePage" class="page">
+    <h1>Welcome to Bank App</h1>
+    <button onclick="goToLogin()">Already a customer</button>
+    <button onclick="goToRegister()">Become a customer</button>
 </section>
 
-<section>
-    <h2>2. List Clients</h2>
-    <button onclick="listClients()">Get Clients</button>
-    <div id="listClientsResp" class="response"></div>
+<!-- Login Page -->
+<section id="loginPage" class="page hidden">
+    <h2>Login</h2>
+    <input id="loginName" placeholder="Enter your name" />
+    <button onclick="login()">Continue</button>
+    <div id="loginError" class="response"></div>
 </section>
 
-<section>
-    <h2>3. Deposit</h2>
-    <input id="depositClient" placeholder="Client Name" />
-    <input id="depositCurrency" placeholder="Currency (e.g. EUR)" />
-    <input type="number" id="depositAmount" placeholder="Amount" />
-    <input id="depositDesc" placeholder="Description" />
-    <button onclick="deposit()">Deposit</button>
-    <div id="depositResp" class="response"></div>
+<!-- Register Page -->
+<section id="registerPage" class="page hidden">
+    <h2>Register</h2>
+    <input id="registerName" placeholder="Enter your name" />
+    <button onclick="register()">Create</button>
+    <div id="registerError" class="response"></div>
 </section>
 
-<section>
-    <h2>4. Withdraw</h2>
-    <input id="withdrawClient" placeholder="Client Name" />
-    <input id="withdrawCurrency" placeholder="Currency" />
-    <input type="number" id="withdrawAmount" placeholder="Amount" />
-    <input id="withdrawDesc" placeholder="Description" />
-    <button onclick="withdraw()">Withdraw</button>
-    <div id="withdrawResp" class="response"></div>
-</section>
+<!-- Banking Page -->
+<section id="bankingPage" class="page hidden">
+    <h2>Banking Operations</h2>
 
-<section>
-    <h2>5. Check Balance</h2>
-    <input id="balanceClient" placeholder="Client Name" />
-    <input id="balanceCurrency" placeholder="Currency" />
-    <button onclick="getBalance()">Check Balance</button>
-    <div id="balanceResp" class="response"></div>
-</section>
+    <section>
+        <h3>Deposit</h3>
+        <select id="depositCurrency"></select>
+        <input type="number" id="depositAmount" placeholder="Amount" />
+        <input id="depositDesc" placeholder="Description" />
+        <button onclick="deposit()">Deposit</button>
+        <div id="depositResp" class="response"></div>
+    </section>
 
-<section>
-    <h2>6. Get Accounts</h2>
-    <input id="accountsClient" placeholder="Client Name" />
-    <button onclick="getAccounts()">Get Accounts</button>
-    <div id="accountsResp" class="response"></div>
+    <section>
+        <h3>Withdraw</h3>
+        <select id="withdrawCurrency"></select>
+        <input type="number" id="withdrawAmount" placeholder="Amount" />
+        <input id="withdrawDesc" placeholder="Description" />
+        <button onclick="withdraw()">Withdraw</button>
+        <div id="withdrawResp" class="response"></div>
+    </section>
+
+    <section>
+        <h3>Check Balance</h3>
+        <select id="balanceCurrency"></select>
+        <button onclick="getBalance()">Check Balance</button>
+        <div id="balanceResp" class="response"></div>
+    </section>
+
+    <section>
+        <h3>Accounts</h3>
+        <button onclick="getAccounts()">Get Accounts</button>
+        <div id="accountsResp" class="response"></div>
+    </section>
 </section>
 
 <script>
+    let currentClient = null;
+    const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'BGN', 'CZK', 'DKK', 'HUF', 'PLN', 'RON', 'SEK'];
+
+    const show = (id) => {
+        document.querySelectorAll('.page').forEach(sec => sec.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    };
+
     const api = (path, method = 'GET', data = null) => {
-        const options = {
-            method,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
+        const options = { method, headers: { 'Content-Type': 'application/json' } };
         if (data) options.body = JSON.stringify(data);
         return fetch(path, options).then(res => res.json());
     };
 
-    const show = (id, data) => {
-        document.getElementById(id).textContent = JSON.stringify(data, null, 2);
-    };
+    const goToLogin = () => show('loginPage');
+    const goToRegister = () => show('registerPage');
 
-    function createClient() {
-        const name = document.getElementById('createClientName').value;
-        api('/api/clients/create', 'POST', { clientName: name })
-            .then(data => show('createClientResp', data));
+    function login() {
+        const name = document.getElementById('loginName').value.trim();
+        if (!name) return;
+
+        api('/api/clients').then(clients => {
+            const match = clients.find(c => c.clientName === name);
+            if (match) {
+                currentClient = name;
+                updateNav();
+                show('bankingPage');
+            } else {
+                document.getElementById('loginError').textContent = 'Client not found.';
+            }
+        });
     }
 
-    function listClients() {
-        api('/api/clients').then(data => show('listClientsResp', data));
+    function register() {
+        const name = document.getElementById('registerName').value.trim();
+        if (!name) return;
+
+        api('/api/clients/create', 'POST', { clientName: name })
+            .then(resp => {
+                if (resp && resp.clientName) {
+                    currentClient = resp.clientName;
+                    updateNav();
+                    show('bankingPage');
+                } else {
+                    document.getElementById('registerError').textContent = 'Failed to create client.';
+                }
+            });
+    }
+
+    function updateNav() {
+        document.getElementById('currentUser').textContent = `Logged in as: ${currentClient}`;
     }
 
     function deposit() {
         api('/api/banking/deposit', 'POST', {
-            clientName: document.getElementById('depositClient').value,
+            clientName: currentClient,
             currency: document.getElementById('depositCurrency').value,
             amount: Number(document.getElementById('depositAmount').value),
             description: document.getElementById('depositDesc').value
-        }).then(data => show('depositResp', data));
+        }).then(data => showResponse('depositResp', data));
     }
 
     function withdraw() {
         api('/api/banking/withdraw', 'POST', {
-            clientName: document.getElementById('withdrawClient').value,
+            clientName: currentClient,
             currency: document.getElementById('withdrawCurrency').value,
             amount: Number(document.getElementById('withdrawAmount').value),
             description: document.getElementById('withdrawDesc').value
-        }).then(data => show('withdrawResp', data));
+        }).then(data => showResponse('withdrawResp', data));
     }
 
     function getBalance() {
@@ -111,21 +154,39 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                clientName: document.getElementById('balanceClient').value,
+                clientName: currentClient,
                 currency: document.getElementById('balanceCurrency').value
             })
-        }).then(res => res.json()).then(data => show('balanceResp', data));
+        }).then(res => res.json()).then(data => showResponse('balanceResp', data));
     }
 
     function getAccounts() {
         fetch('/api/banking/accounts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                clientName: document.getElementById('accountsClient').value
-            })
-        }).then(res => res.json()).then(data => show('accountsResp', data));
+            body: JSON.stringify({ clientName: currentClient })
+        }).then(res => res.json()).then(data => showResponse('accountsResp', data));
     }
+
+    function showResponse(id, data) {
+        document.getElementById(id).textContent = JSON.stringify(data, null, 2);
+    }
+
+    function populateCurrencySelects() {
+        const currencySelectIds = ['depositCurrency', 'withdrawCurrency', 'balanceCurrency'];
+        currencySelectIds.forEach(id => {
+            const select = document.getElementById(id);
+            CURRENCIES.forEach(curr => {
+                const option = document.createElement('option');
+                option.value = curr;
+                option.text = curr;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    show('welcomePage');
+    populateCurrencySelects();
 </script>
 </body>
 </html>
